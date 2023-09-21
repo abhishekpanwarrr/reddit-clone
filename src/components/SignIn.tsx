@@ -1,5 +1,5 @@
 import { Icons } from '@/components/Icons'
-// import UserAuthForm from '@/components/UserAuthForm'
+import UserAuthForm from '@/components/UserAuthForm'
 import Link from 'next/link'
 
 const SignIn = () => {
@@ -13,7 +13,7 @@ const SignIn = () => {
           User Agreement and Privacy Policy.
         </p>
       </div>
-      {/* <UserAuthForm /> */}
+      <UserAuthForm />
       <p className='px-8 text-center text-sm text-muted-foreground'>
         New to Reddit?{' '}
         <Link
