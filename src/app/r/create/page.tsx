@@ -4,14 +4,17 @@ import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { useRouter } from "next/navigation";
 import { useMutation } from "@tanstack/react-query";
-import axios from "axios";
+import axios, { AxiosError } from "axios";
 import { CreateSubredditPayload } from "@/lib/validators/subReddit";
+import { toast } from "@/hooks/use-toast";
+import { useCustomToasts } from "@/hooks/use-custom-toast";
 
 const Page: FC = () => {
   const [input, setInput] = useState<string>("");
   const router = useRouter();
+  const { loginToast } = useCustomToasts();
 
-  const { mutate:createCommunity,isLoading } = useMutation({
+  const { mutate: createCommunity, isLoading } = useMutation({
     mutationFn: async () => {
       const payload: CreateSubredditPayload = {
         name: input,
@@ -19,6 +22,35 @@ const Page: FC = () => {
       const { data } = await axios.post("/api/subreddit", payload);
       return data as string;
     },
+    onError: (err) => {
+      if (err instanceof AxiosError) {
+        if (err.response?.status === 409) {
+          toast({
+            title: "Subreddit already exists",
+            description: "Choose a new Subreddit",
+            variant: "destructive",
+          });
+        }
+        if (err.response?.status === 422) {
+          toast({
+            title: "Invalid subreddit name",
+            description: "Please choose a proper name",
+            variant: "destructive",
+          });
+        }
+        if (err.response?.status === 401) {
+          return loginToast();
+        }
+      }
+      toast({
+        title: "Unknown error",
+        description: "Please try again later",
+        variant: "destructive",
+      });
+    },
+    onSuccess:(data) =>{
+        router.push(`/r/${data}`)
+    }
   });
   return (
     <div className="container flex items-center h-full max-w-3xl mx-auto">
@@ -47,7 +79,13 @@ const Page: FC = () => {
           <Button variant="subtle" onClick={() => router.back()}>
             Cancel
           </Button>
-          <Button isLoading={isLoading} disabled={input.length === 0} onClick={() => createCommunity()} >Create community</Button>
+          <Button
+            isLoading={isLoading}
+            disabled={input.length === 0}
+            onClick={() => createCommunity()}
+          >
+            Create community
+          </Button>
         </div>
       </div>
     </div>
